@@ -5,68 +5,52 @@ namespace MauiAppMinhasCompras.Views;
 
 public partial class ListaProduto : ContentPage
 {
-    ObservableCollection<Produto> lista = new ObservableCollection<Produto>();
+    ObservableCollection<Produto> lista_produtos = new ObservableCollection<Produto>();
 
     public ListaProduto()
     {
         InitializeComponent();
-        lst_produtos.ItemsSource = lista;
+        lst_produtos.ItemsSource = lista_produtos;
     }
 
-    protected async override void OnAppearing()
+    protected override async void OnAppearing()
     {
-        base.OnAppearing();
         try
         {
-            lista.Clear();
+            lista_produtos.Clear();
             List<Produto> tmp = await App.Db.GetAll();
-            tmp.ForEach(i => lista.Add(i));
+            tmp.ForEach(i => lista_produtos.Add(i));
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro", ex.Message, "OK");
+            await DisplayAlert("Ops", ex.Message, "OK");
         }
     }
 
-    private async void txt_search_TextChanged(object sender, TextChangedEventArgs e)
+    // BOTÃO ADICIONAR (ToolbarItem_Clicked)
+    private async void ToolbarItem_Clicked(object sender, EventArgs e)
     {
         try
         {
-            string q = e.NewTextValue;
-            lista.Clear();
-            List<Produto> tmp = await App.Db.Search(q);
-            tmp.ForEach(i => lista.Add(i));
+            await Navigation.PushAsync(new NovoProduto());
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Erro", ex.Message, "OK");
+            await DisplayAlert("Ops", ex.Message, "OK");
         }
     }
 
-    private void ToolbarItem_Clicked(object sender, EventArgs e)
-    {
-        Navigation.PushAsync(new Views.NovoProduto());
-    }
-
-    private void ToolBarItem_Clicked_1(object sender, EventArgs e)
-    {
-        double soma = lista.Sum(i => i.Total);
-        DisplayAlert("Total", $"O total é {soma:C}", "OK");
-    }
-
-    private async void MenuItem_Clicked(object sender, EventArgs e)
+    // BOTÃO SOMAR (ToolBarItem_Clicked_1) - O Relatório!
+    private async void ToolBarItem_Clicked_1(object sender, EventArgs e)
     {
         try
         {
-            MenuItem selecionado = sender as MenuItem;
-            Produto p = selecionado.BindingContext as Produto;
+            string categoria = await DisplayActionSheet("Relatório de Gastos", "Cancelar", null, "Alimentos", "Limpeza", "Higiene", "Outros");
 
-            bool confirm = await DisplayAlert("Tem Certeza?", $"Remover {p.Descricao}?", "Sim", "Não");
-
-            if (confirm)
+            if (categoria != "Cancelar" && categoria != null)
             {
-                await App.Db.Delete(p.Id);
-                lista.Remove(p);
+                double total = await App.Db.GetTotalGastoPorCategoria(categoria);
+                await DisplayAlert("Total Gasto", $"Na categoria {categoria}, o total é: {total:C}", "OK");
             }
         }
         catch (Exception ex)
@@ -75,22 +59,55 @@ public partial class ListaProduto : ContentPage
         }
     }
 
-    private void lst_produtos_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+    private async void txt_search_TextChanged(object sender, TextChangedEventArgs e)
     {
         try
         {
-            Produto p = e.SelectedItem as Produto;
-            if (p != null)
+            string busca = e.NewTextValue;
+            lista_produtos.Clear();
+            List<Produto> tmp;
+
+            if (string.IsNullOrEmpty(busca))
+                tmp = await App.Db.GetAll();
+            else
+                tmp = await App.Db.SearchByCategoria(busca);
+
+            tmp.ForEach(i => lista_produtos.Add(i));
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Ops", ex.Message, "OK");
+        }
+    }
+
+    private async void lst_produtos_ItemSelected(object sender, SelectedItemChangedEventArgs e)
+    {
+        // Apenas para evitar erro de seleção, mas o relatório principal está no botão Somar
+        ((ListView)sender).SelectedItem = null;
+    }
+
+    private void lst_produtos_Refreshing(object sender, EventArgs e)
+    {
+        OnAppearing();
+        lst_produtos.IsRefreshing = false;
+    }
+
+    private async void MenuItem_Clicked(object sender, EventArgs e)
+    {
+        try
+        {
+            MenuItem m = sender as MenuItem;
+            Produto p = m.BindingContext as Produto;
+
+            if (await DisplayAlert("Confirmação", $"Deseja remover {p.Descricao}?", "Sim", "Não"))
             {
-                Navigation.PushAsync(new Views.EditarProduto()
-                {
-                    BindingContext = p,
-                });
+                await App.Db.Delete(p.Id);
+                lista_produtos.Remove(p);
             }
         }
         catch (Exception ex)
         {
-            DisplayAlert("Ops", ex.Message, "OK");
+            await DisplayAlert("Ops", ex.Message, "OK");
         }
     }
 }

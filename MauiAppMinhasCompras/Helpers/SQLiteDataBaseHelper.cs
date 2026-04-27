@@ -20,16 +20,12 @@ namespace MauiAppMinhasCompras.Helpers
 
         public Task<List<Produto>> Update(Produto p)
         {
-            string sql = "UPDATE Produto SET Descricao=?, Quantidade=?, Preco=? WHERE Id=?";
-
-            return _conn.QueryAsync<Produto>(
-                sql, p.Descricao, p.Quantidade, p.Preco, p.Id
-            );
+            string sql = "UPDATE Produto SET Descricao=?, Categoria=?, Quantidade=?, Preco=? WHERE Id=?";
+            return _conn.QueryAsync<Produto>(sql, p.Descricao, p.Categoria, p.Quantidade, p.Preco, p.Id);
         }
 
         public Task<int> Delete(int id)
         {
-            
             return _conn.Table<Produto>().DeleteAsync(i => i.Id == id);
         }
 
@@ -38,12 +34,17 @@ namespace MauiAppMinhasCompras.Helpers
             return _conn.Table<Produto>().ToListAsync();
         }
 
-        public Task<List<Produto>> Search(string q)
+        // NOVO: Busca apenas produtos de uma categoria específica
+        public Task<List<Produto>> SearchByCategoria(string categoria)
         {
-            
-            string sql = "SELECT * FROM Produto WHERE Descricao LIKE '%" + q + "%'";
+            return _conn.Table<Produto>().Where(p => p.Categoria == categoria).ToListAsync();
+        }
 
-            return _conn.QueryAsync<Produto>(sql);
+        // NOVO: Calcula o total gasto em uma categoria específica
+        public async Task<double> GetTotalGastoPorCategoria(string categoria)
+        {
+            var lista = await SearchByCategoria(categoria);
+            return lista.Sum(p => p.Total);
         }
     }
 }

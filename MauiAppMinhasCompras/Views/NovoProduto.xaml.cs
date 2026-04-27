@@ -9,19 +9,20 @@ public partial class NovoProduto : ContentPage
         InitializeComponent();
     }
 
-      private async void ToolbarItem_Clicked(object sender, EventArgs e)
+    private async void ToolbarItem_Clicked(object sender, EventArgs e)
     {
         try
         {
             Produto p = new Produto
             {
                 Descricao = txt_descricao.Text,
+                Categoria = txt_categoria.Text, // Lendo a categoria da tela
                 Quantidade = Convert.ToDouble(txt_quantidade.Text),
-                Preco = Convert.ToDouble(txt_preco.Text) 
+                Preco = Convert.ToDouble(txt_preco.Text)
             };
 
             await App.Db.Insert(p);
-            await DisplayAlert("Sucesso!", "Produto Salvo", "OK");
+            await DisplayAlert("Sucesso!", "Produto Salvo com Categoria", "OK");
             await Navigation.PopAsync();
         }
         catch (Exception ex)

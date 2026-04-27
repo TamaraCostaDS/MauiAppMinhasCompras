@@ -9,7 +9,7 @@
         <ToolbarItem Text="Adicionar" Clicked="ToolbarItem_Clicked" />
     </ContentPage.ToolbarItems>
 
-    <VerticalStackLayout Padding="20">
+    <StackLayout Padding="20">
         <Label Text="Minhas Compras"
                FontSize="24"
                VerticalOptions="Center" 
@@ -20,10 +20,14 @@
                    Placeholder="Busca de Produtos" 
                    TextChanged="txt_search_TextChanged" />
 
-        <ListView x:Name="lst_produtos" ItemSelected="lst_produtos_ItemSelected">
+        <ListView x:Name="lst_produtos" 
+                  IsPullToRefreshEnabled="True"
+                  Refreshing="lst_produtos_Refreshing"
+                  ItemSelected="lst_produtos_ItemSelected"
+                  HasUnevenRows="True">
 
             <ListView.Header>
-                <Grid ColumnDefinitions="*, *, *, *, *">
+                <Grid ColumnDefinitions="*, 2*, *, *, *" Padding="5">
                     <Label Grid.Column="0" Text="ID" FontAttributes="Bold" />
                     <Label Grid.Column="1" Text="Desc." FontAttributes="Bold" />
                     <Label Grid.Column="2" Text="Preço" FontAttributes="Bold" />
@@ -36,10 +40,12 @@
                 <DataTemplate>
                     <ViewCell>
                         <ViewCell.ContextActions>
-                            <MenuItem Text="Remover" Clicked="MenuItem_Clicked" IsDestructive="True" />
+                            <MenuItem Text="Remover" 
+                                      Clicked="MenuItem_Clicked" 
+                                      IsDestructive="True" />
                         </ViewCell.ContextActions>
 
-                        <Grid ColumnDefinitions="*, *, *, *, *">
+                        <Grid ColumnDefinitions="*, 2*, *, *, *" Padding="5">
                             <Label Grid.Column="0" Text="{Binding Id}" />
                             <Label Grid.Column="1" Text="{Binding Descricao}" />
                             <Label Grid.Column="2" Text="{Binding Preco, StringFormat='{0:C}'}" />
@@ -50,5 +56,5 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-    </VerticalStackLayout>
+    </StackLayout>
 </ContentPage>
